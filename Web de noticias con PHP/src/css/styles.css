@@ -1,0 +1,193 @@
+/* Estilos generales */
+body {
+    font-family: verdana, arial !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: #344050 !important;
+    color: white !important;
+    overflow-x: hidden !important;
+}
+
+main {
+    padding: 20px !important;
+}
+
+ul {
+    list-style-type: none !important;
+    padding: 0 !important;
+}
+
+li {
+    margin-bottom: 20px !important;
+}
+
+a {
+    color: #007bff !important;
+    text-decoration: none !important;
+}
+
+a:hover {
+    text-decoration: underline !important;
+}
+
+button > a {
+    color: #FFFFFF !important;
+    text-decoration: none !important;
+}
+
+button > a:hover {
+    text-decoration: none !important;
+}
+
+form {
+    margin-bottom: 20px !important;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+textarea {
+    padding: 10px !important;
+    margin-bottom: 10px !important;
+    margin-left: 30%;
+    margin-right: 30%;
+    border: 1px solid #ccc !important;
+    border-radius: 5px !important;
+}
+
+button {
+    padding: 10px 20px !important;
+    background-color: #007bff !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 5px !important;
+    cursor: pointer !important;
+}
+
+button:hover {
+    background-color: #0056b3 !important;
+}
+
+.header_index_page {
+    background-color: #344050 !important;
+    margin-right: 0% !important;
+    top: 0 !important;
+    height: 13% !important;
+    padding: 13px 0 10px !important;
+    width: 100% !important;
+}
+
+.article {
+    background-color: #f9f9f9 !important;
+    border: 1px solid #ddd !important;
+    border-radius: 5px !important;
+    padding: 20px !important;
+    color: #5A5A5A !important;
+    margin-left: 5% !important;
+    margin-right: 5% !important;
+}
+
+.article h2 {
+    margin-top: 0 !important;
+}
+
+.article p {
+    margin-bottom: 10px !important;
+}
+
+.button_footer {
+    background-color: #344050 !important;
+    margin-right: 0% !important;
+    bottom: 0 !important;
+    height: 5% !important;
+    padding: 13px 0 4px !important;
+    width: 100% !important;
+}
+
+.button_footer > a {
+    padding: 10px 20px !important;
+    background-color: #4CAF50 !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 5px !important;
+    cursor: pointer !important;
+    width: 30% !important;
+    position: relative !important;
+    right: -90% !important;
+}
+
+.button_footer > a:hover {
+    background-color: #45a049 !important;
+}
+
+.button {
+    padding: 10px 20px !important;
+    background-color: #4CAF50 !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 5px !important;
+    cursor: pointer !important;
+    width: 30% !important;
+    position: relative !important;
+    right: -2% !important;
+}
+
+.button:hover {
+    background-color: #45a049 !important;
+}
+
+.button_form {
+    background-color: #4CAF50 !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 5px !important;
+    cursor: pointer !important;
+}
+
+.button_form:hover {
+    background-color: #45a049 !important;
+}
+
+#contenedorNoticias {
+    font-size:11pt !important; 
+    text-align: center !important; 
+    padding: 10px 5px 10px 5px !important;         
+    width:90% !important;
+    margin-left: 5%;
+}
+
+th {
+    cursor: pointer;
+  }
+
+th:focus {
+    outline: none;
+  }
+
+th:focus::after {
+    content: '\25B2';
+    margin-left: 5px;
+  }
+
+th:focus.DESC::after {
+    content: '\25B2'; /* Icono de flecha hacia arriba */
+  }
+
+th:focus.desc::after {
+    content: '\25BC'; /* Icono de flecha hacia abajo */
+  }
+
+.button_table > a {
+    padding: 10px 20px !important;
+    background-color: #4CAF50 !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 5px !important;
+    cursor: pointer !important;
+    position: relative !important;
+    right: -9% !important;
+}
+
+.button_table > a:hover {
+    text-decoration: underline !important;
+}
