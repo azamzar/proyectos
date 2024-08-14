@@ -1,0 +1,19 @@
+{
+  "files": {
+    "main.css": "/static/css/main.6caa483b.css",
+    "main.js": "/static/js/main.22ef43dd.js",
+    "static/media/pokedex.png": "/static/media/pokedex.5037bf3372e430881bb0.png",
+    "static/media/Johto-Kanto_Map.png": "/static/media/Johto-Kanto_Map.298723ff8b0f40d93429.png",
+    "static/media/pikachu.png": "/static/media/pikachu.cb81c8c0d7c92787bb35.png",
+    "static/media/pokeball.png": "/static/media/pokeball.9fc0eeaeda972e93ebc7.png",
+    "static/media/pointer.png": "/static/media/pointer.c4d66545da1efa0a380d.png",
+    "static/media/trainercard.png": "/static/media/trainercard.13bb434e9e57e0bbd5f8.png",
+    "index.html": "/index.html",
+    "main.6caa483b.css.map": "/static/css/main.6caa483b.css.map",
+    "main.22ef43dd.js.map": "/static/js/main.22ef43dd.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.6caa483b.css",
+    "static/js/main.22ef43dd.js"
+  ]
+}
