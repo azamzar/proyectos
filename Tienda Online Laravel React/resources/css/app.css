@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.nav-item,
+.nav-link {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    color: black !important;
+}
+
+.nav-link:hover {
+    color: #ff3b5f !important;
+}
+
+.navbar-nav .nav-link {
+    font-size: 1.2rem;
+    margin: 0 2px;
+}
+
+/* Estilo específico para el enlace de Cerrar Sesión */
+.nav-link.log {
+    background-color: transparent !important; /* Fondo transparente */
+    color: #ff3b5f !important; /* Mantener el color rojo */
+    border: none !important;
+}
+
+.nav-link.log:hover {
+    background-color: transparent !important; /* Sin cambio en el hover */
+    color: #d2afd7 !important;
+}
+
+button,
+.btn {
+    background-color: #d2afd7; /* Cambia este color por el que quieras */
+    color: #ffffff; /* Color del texto */
+    //border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px; /* Bordes redondeados */
+    transition: background-color 0.3s ease; /* Transición suave */
+}
+
+button:hover,
+.btn:hover {
+    background-color: #45a049; /* Color para el hover */
+}
+
+.btn-primary {
+    background-color: #d2afd7 !important; /* Color de fondo */
+    border-color: #d2afd7 !important; /* Borde */
+}
+
+.btn-primary:hover {
+    background-color: #ff3b5f !important; /* Hover */
+    border-color: #d2afd7 !important;
+}
+
+/* Estilo base de los enlaces dentro de productos */
+.products-container a {
+    color: #000000 !important; /* Color del enlace */
+    text-decoration: none !important; /* Asegurar que no aparezca subrayado al hacer hover */
+}
+
+/* Estilo de hover para los enlaces dentro de productos */
+.products-container a:hover {
+    color: #ff3b5f !important; /* Color al hacer hover */
+    text-decoration: none !important; /* Asegurar que no aparezca subrayado al hacer hover */
+}
+
+.product-image {
+    width: 1000px; /* Cambia este tamaño según lo que necesites */
+    height: 1000px; /* Cambia este tamaño según lo que necesites */
+    object-fit: cover; /* Para ajustar la imagen dentro del contenedor */
+}
