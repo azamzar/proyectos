@@ -1,0 +1,8 @@
+streamlit
+langchain-core
+langchain-openai
+langchain-chroma
+langgraph
+langgraph-checkpoint-sqlite
+chromadb
+pydantic

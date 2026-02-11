@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Datos de usuario (conversaciones, DBs)
+users/
+
+# Bases de datos SQLite
+*.db
+*.db-shm
+*.db-wal
+
+# Variables de entorno
+.env
+
+# IDEs
+.vscode/
+.idea/
