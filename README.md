@@ -1,1 +1,5 @@
-En este repositorio iré añadiendo proyectos realizados en clases de la FP de DAW o bien por mi cuenta o en otros cursos.
+En este repositorio iré añadiendo proyectos personales y profesionales.
+
+- LinkedIn: https://www.linkedin.com/in/albertozambranozarallo
+
+- Portfolio: https://alberto-zambrano.netlify.app
