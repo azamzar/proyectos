@@ -1,0 +1,131 @@
+/* RESET */
+body {
+  margin: 0;
+  font-family: Inter, system-ui, sans-serif;
+  background: #0f172a;
+  color: #1d72e2;
+}
+
+/* APP */
+.app-container {
+  padding: 20px;
+}
+
+/* HEADER */
+.app-header {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.app-header span {
+  font-size: 14px;
+  color: #94a3b8;
+}
+
+/* BOARD */
+.board {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+}
+
+/* COLUMN */
+.column {
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 15px;
+  min-width: 280px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+/* COLUMN HEADER */
+.column-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.column-header h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.column-header span {
+  background: #1e293b;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+/* CARDS */
+.cards-container {
+  min-height: 20px;
+}
+
+.card {
+  background: #1e293b;
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  cursor: grab;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  background: #334155;
+}
+
+/* ADD CARD */
+.add-card {
+  display: flex;
+  margin-top: 10px;
+  gap: 5px;
+}
+
+.add-card input {
+  flex: 1;
+  padding: 8px;
+  border-radius: 8px;
+  border: none;
+  background: #0f172a;
+  color: white;
+}
+
+.add-card button {
+  background: #3b82f6;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  padding: 0 12px;
+  cursor: pointer;
+}
+
+.add-card button:hover {
+  background: #2563eb;
+}
+
+/* DRAGGING CARD (overlay flotante) */
+.dragging {
+  background: #1e293b;
+  padding: 12px;
+  border-radius: 10px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+  transform: scale(1.05);
+  opacity: 0.95;
+  cursor: grabbing;
+}
+
+/* mientras arrastras la original */
+.card:active {
+  cursor: grabbing;
+}
