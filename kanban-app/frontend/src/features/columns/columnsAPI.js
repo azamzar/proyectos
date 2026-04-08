@@ -1,12 +1,12 @@
-import api from '../../services/api'; // axios configurado con VITE_API_URL  
+import api from '../../services/api';
 
-export const fetchColumnsAPI = async () => {
-  const res = await api.get('/columns');
+export const fetchColumnsAPI = async (boardId) => {
+  const res = await api.get(`/boards/${boardId}/columns`);
   return res.data;
 };
 
-export const createColumnAPI = async (name) => {
-  const res = await api.post('/columns', { name });
+export const createColumnAPI = async ({ name, boardId }) => {
+  const res = await api.post(`/boards/${boardId}/columns`, { name });
   return res.data;
 };
 

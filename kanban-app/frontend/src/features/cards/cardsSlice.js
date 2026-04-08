@@ -4,9 +4,15 @@ import api from '../../services/api';
 // -------------------- FETCH CARDS --------------------
 export const fetchCards = createAsyncThunk(
   'cards/fetchCards',
-  async () => {
-    const response = await api.get('/cards');
-    return response.data;
+  async (boardId, { getState, rejectWithValue }) => {
+    try {
+      const { auth } = getState();
+      const res = await api.get(`/boards/${boardId}/cards`, {
+      });
+      return res.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || 'Error al obtener cards');
+    }
   }
 );
 

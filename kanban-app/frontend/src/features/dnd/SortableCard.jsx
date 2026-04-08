@@ -1,24 +1,18 @@
-import { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { updateCard } from '../cards/cardsSlice';
-import { updateLocal } from '../cards/cardsSlice';
+import { openCardModal } from '../ui/uiSlice';
+import { useState } from 'react';
+
+// 🔹 Función de truncado por caracteres
+function truncateText(text, maxLength = 100) {
+  if (!text) return "";
+  if (text.length <= maxLength) return text;
+  return text.slice(0, maxLength) + "...";
+}
 
 export default function SortableCard({ card }) {
   const dispatch = useDispatch();
-
-  const [isEditing, setIsEditing] = useState(false);
-  const [title, setTitle] = useState(card.title);
-  const [description, setDescription] = useState(card.description || '');
-
-  // ✅ SOLO sincroniza si NO estás editando
-  useEffect(() => {
-    if (!isEditing) {
-      setTitle(card.title);
-      setDescription(card.description || '');
-    }
-  }, [card.title, card.description, isEditing]);
 
   const {
     attributes,
@@ -32,61 +26,37 @@ export default function SortableCard({ card }) {
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    padding: '10px',
-    margin: '5px',
-    background: 'white',
-    borderRadius: '6px',
   };
 
-  const handleSave = () => {
-    dispatch(updateLocal({
-      id: card.id,
-      title,
-      description
-    }));
-
-    dispatch(updateCard({
-      id: card.id,
-      data: { title, description }
-    }));
-
-    setIsEditing(false);
-  };
+  // 🔹 Estado opcional para expandir inline (si quieres expandir en el futuro)
+  const [expanded, setExpanded] = useState(false);
 
   return (
     <div ref={setNodeRef} style={style} className="card">
 
       {/* DRAG HANDLE */}
-      <div {...attributes} {...listeners} style={{ cursor: 'grab' }}>
+      <div {...attributes} {...listeners} className="drag-handle">
         ⠿
       </div>
 
       {/* CONTENIDO */}
-      <div style={{ flex: 1 }}>
-        {isEditing ? (
-          <div className="card-edit">
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Título"
-            />
+      <div
+        className="card-content"
+        onClick={(e) => {
+          e.stopPropagation();
+          dispatch(openCardModal(card.id));
+        }}
+      >
+        <div className="card-title">
+          {truncateText(card.title, 50)}
+        </div>
 
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Descripción"
-            />
-
-            <button onClick={handleSave}>
-              Guardar
-            </button>
-          </div>
-        ) : (
-          <div onClick={() => setIsEditing(true)}>
-            <strong>{card.title}</strong>
-            {card.description && <p>{card.description}</p>}
-          </div>
-        )}
+        <div className="card-description">
+          {expanded
+            ? card.description || "Sin descripción"
+            : truncateText(card.description, 30) || "Sin descripción"
+          }
+        </div>
       </div>
 
     </div>

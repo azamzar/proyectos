@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchColumns, updateColumn } from './columnsSlice';
 import { fetchCards, createCard, reorderCard } from '../cards/cardsSlice';
+import { useParams } from 'react-router-dom';
 
 // 🧠 DND-KIT
 import { DndContext, closestCenter, DragOverlay } from '@dnd-kit/core';
@@ -14,18 +15,33 @@ const ColumnsPage = () => {
   const dispatch = useDispatch();
   const columns = useSelector(state => state.columns.items);
   const cards = useSelector(state => state.cards.items);
+  console.log('ALL CARDS:', cards);
 
   const [newCardTitles, setNewCardTitles] = useState({});
   const [activeCard, setActiveCard] = useState(null);
 
   // ✏️ edición columnas
-  const [editingColumnId, setEditingColumnId] = useState(null);
+ 
+const [editingColumnId, setEditingColumnId] = useState(null);
   const [columnName, setColumnName] = useState('');
 
+  const { boardId } = useParams();
+  const boardIdNum = Number(boardId);
+
+  console.log('boardId:', boardId);
+  console.log('TOKEN:', localStorage.getItem('token'));
+  if (!boardId) return <div>Cargando...</div>;
+
   useEffect(() => {
-    dispatch(fetchColumns());
-    dispatch(fetchCards());
-  }, [dispatch]);
+  const load = async () => {
+    if (!boardIdNum) return;
+
+    await dispatch(fetchColumns(boardIdNum));
+    await dispatch(fetchCards(boardIdNum));
+  };
+
+  load();
+}, [dispatch, boardIdNum]);
 
   // ------------------ CREATE CARD ------------------
   const handleCreateCard = (columnId) => {
@@ -184,7 +200,10 @@ const ColumnsPage = () => {
       <DragOverlay dropAnimation={null}>
         {activeCard ? (
           <div className="card dragging">
-            {activeCard.title}
+            <div className="card-title">{activeCard.title}</div>
+            <div className="card-description">
+              {activeCard.description || "Sin descripción"}
+            </div>
           </div>
         ) : null}
       </DragOverlay>

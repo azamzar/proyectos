@@ -1,6 +1,9 @@
 import api from '../../services/api';
 
-export const fetchCardsAPI = () => api.get('/cards');
+export const fetchCardsAPI = async (boardId) => {
+  const res = await api.get(`/boards/${boardId}/cards`);
+  return res.data;
+};
 
 export const createCardAPI = (cardData) =>
   api.post('/cards', cardData);
