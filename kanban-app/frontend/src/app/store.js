@@ -1,10 +1,12 @@
 import { configureStore } from '@reduxjs/toolkit';
+import authReducer from '../features/auth/authSlice';
 import columnsReducer from '../features/columns/columnsSlice';
-import cardsReducer from '../features/cards/cardsSlice'; // si lo tienes
+import cardsReducer from '../features/cards/cardsSlice';
 
 export const store = configureStore({
   reducer: {
-    columns: columnsReducer, // ✅ la key aquí debe coincidir con useSelector
+    auth: authReducer,     
+    columns: columnsReducer, 
     cards: cardsReducer,
   },
 });

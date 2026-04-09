@@ -11,8 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('list_models', function (Blueprint $table) {
+        Schema::create('columns', function (Blueprint $table) {
             $table->id();
+            $table->string('name');
+            // 🆕 Añade esta línea para conectar la columna con el tablero
+            $table->foreignId('board_id')->constrained()->onDelete('cascade');
+            $table->integer('position')->default(0);
             $table->timestamps();
         });
     }
@@ -22,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('list_models');
+        Schema::dropIfExists('columns');
     }
 };

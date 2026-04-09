@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchCards } from './cardsSlice';
-import CreateCardForm from './CreateCardForm';
+import CreateCardForm from './CreateCardForm.jsx';
 
 function CardsPage() {
   const dispatch = useDispatch();

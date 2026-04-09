@@ -1,86 +1,133 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchColumns, updateColumn } from './columnsSlice';
-import { fetchCards, createCard, reorderCard } from '../cards/cardsSlice';
+import { fetchCards, reorderCard } from '../cards/cardsSlice';
+import CreateCardForm from '../cards/CreateCardForm.jsx'; 
 
-// 🧠 DND-KIT
-import { DndContext, closestCenter, DragOverlay } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import '../../styles/kanban.css';
+import '../../styles/index.css';
 
-// ✅ IMPORTANTE: usar SOLO el componente externo
+import { 
+  DndContext,
+  pointerWithin,
+  DragOverlay, 
+  PointerSensor, 
+  KeyboardSensor,
+  useDroppable,
+  useSensor, 
+  useSensors 
+} from '@dnd-kit/core';
+import { 
+  SortableContext, 
+  verticalListSortingStrategy, 
+  sortableKeyboardCoordinates 
+} from '@dnd-kit/sortable';
+
 import SortableCard from '../dnd/SortableCard';
 
 const ColumnsPage = () => {
   const dispatch = useDispatch();
-  const columns = useSelector(state => state.columns.items);
-  const cards = useSelector(state => state.cards.items);
+  
+  const columns = useSelector(state => state.columns?.items || []);
+  const cards = useSelector(state => state.cards?.items || []);
+  const status = useSelector(state => state.columns?.status || 'idle');
 
-  const [newCardTitles, setNewCardTitles] = useState({});
   const [activeCard, setActiveCard] = useState(null);
-
-  // ✏️ edición columnas
   const [editingColumnId, setEditingColumnId] = useState(null);
   const [columnName, setColumnName] = useState('');
+
+  // 🛠️ ESTADOS DEL MODAL
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedColumn, setSelectedColumn] = useState(null);
+  const [selectedCard, setSelectedCard] = useState(null);
+
+  const openCreateModal = (columnId) => {
+    setSelectedCard(null);
+    setSelectedColumn(columnId);
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (card) => {
+    setSelectedCard(card);
+    setIsModalOpen(true);
+  };
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
 
   useEffect(() => {
     dispatch(fetchColumns());
     dispatch(fetchCards());
   }, [dispatch]);
 
-  // ------------------ CREATE CARD ------------------
-  const handleCreateCard = (columnId) => {
-    const title = newCardTitles[columnId];
-    if (!title || !title.trim()) return;
+  if (status === 'loading') return <div className="loading-screen">Cargando...</div>;
 
-    dispatch(createCard({ title, description: '', column_id: columnId }));
+  function DroppableColumn({ id, children }) {
+    const { setNodeRef } = useDroppable({ id });
+    
+    return (
+      <div ref={setNodeRef} className="cards-container">
+        {children}
+      </div>
+    );
+  }
 
-    setNewCardTitles(prev => ({
-      ...prev,
-      [columnId]: ''
-    }));
-  };
-
-  // ------------------ DRAG START ------------------
-  const handleDragStart = (event) => {
-    const card = cards.find(c => c.id === event.active.id);
-    setActiveCard(card);
-  };
-
-  // ------------------ DRAG END ------------------
   const handleDragEnd = (event) => {
     const { active, over } = event;
-
     setActiveCard(null);
 
     if (!over) return;
 
-    const activeCardData = cards.find(c => c.id === active.id);
-    const overCard = cards.find(c => c.id === over.id);
+    const activeCardId = active.id;
+    const overId = over.id; // Ahora puede ser '2' (id de carta) o 'col-3' (id de columna)
 
-    if (!activeCardData || !overCard) return;
+    const activeCardData = cards.find(c => c.id === activeCardId);
+    if (!activeCardData) return;
 
-    dispatch(reorderCard({
-      card_id: activeCardData.id,
-      new_column_id: overCard.column_id,
-      new_position: overCard.position
-    }));
+    let newColumnId;
+    let newPosition = 0;
+
+    // 🕵️‍♂️ DETECCIÓN DE COLUMNA VACÍA
+    // Si el ID del lugar donde soltamos empieza por "col-", es una columna
+    if (String(overId).startsWith('col-')) {
+      const realColumnId = Number(String(overId).replace('col-', ''));
+      newColumnId = realColumnId;
+      newPosition = 1; 
+    } 
+    // 🕵️‍♂️ DETECCIÓN DE OTRA TARJETA
+    // Si no tiene prefijo, significa que lo soltamos sobre una tarjeta normal
+    else {
+      const overCard = cards.find(c => c.id === overId);
+      if (overCard) {
+        newColumnId = overCard.column_id;
+        newPosition = overCard.position;
+      }
+    }
+
+    // Si encontramos un destino válido, enviamos la acción a Redux
+    if (newColumnId) {
+      dispatch(reorderCard({
+        card_id: activeCardData.id,
+        new_column_id: newColumnId,
+        new_position: newPosition
+      }));
+    }
   };
 
   return (
     <DndContext
-      collisionDetection={closestCenter}
-      onDragStart={handleDragStart}
+      sensors={sensors}
+      collisionDetection={pointerWithin}
+      onDragStart={(e) => setActiveCard(cards.find(c => c.id === e.active.id))}
       onDragEnd={handleDragEnd}
     >
       <div className="app-container">
-        
-        {/* HEADER */}
         <header className="app-header">
           <h1>Kanban</h1>
-          <span>Productivity Board</span>
         </header>
 
-        {/* BOARD */}
         <div className="board">
           {columns.map(col => {
             const columnCards = cards
@@ -89,106 +136,51 @@ const ColumnsPage = () => {
 
             return (
               <div key={col.id} className="column">
-
-                {/* ✏️ HEADER EDITABLE */}
                 <div className="column-header">
-                  {editingColumnId === col.id ? (
-                    <input
-                      value={columnName}
-                      autoFocus
-                      onClick={(e) => e.stopPropagation()}
-                      onChange={(e) => setColumnName(e.target.value)}
-                      onBlur={() => {
-                        if (columnName.trim()) {
-                          dispatch(updateColumn({
-                            id: col.id,
-                            name: columnName
-                          }));
-                        }
-                        setEditingColumnId(null);
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          if (columnName.trim()) {
-                            dispatch(updateColumn({
-                              id: col.id,
-                              name: columnName
-                            }));
-                          }
-                          setEditingColumnId(null);
-                        }
-                      }}
-                      style={{
-                        width: '100%',
-                        padding: '6px',
-                        borderRadius: '6px',
-                        border: '1px solid #ccc'
-                      }}
-                    />
-                  ) : (
-                    <h3
-                      onMouseDown={(e) => e.stopPropagation()}
-                      onClick={() => {
-                        setEditingColumnId(col.id);
-                        setColumnName(col.name || '');
-                      }}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      {col.name || 'Sin nombre'}
-                    </h3>
-                  )}
-
+                  <h3 onClick={() => { setEditingColumnId(col.id); setColumnName(col.name || ''); }}>
+                    {col.name || 'Sin nombre'}
+                  </h3>
                   <span>{columnCards.length}</span>
                 </div>
 
-                {/* 🃏 CARDS */}
-                <SortableContext
-                  items={columnCards.map(c => c.id)}
+                <SortableContext 
+                  items={columnCards.map(c => c.id)} 
                   strategy={verticalListSortingStrategy}
                 >
-                  <div className="cards-container">
+                  {/* Sustituimos el div anterior por nuestro nuevo componente Droppable */}
+                  <DroppableColumn id={`col-${col.id}`}>
                     {columnCards.map(card => (
-                      <SortableCard
-                        key={card.id}
-                        card={card}
-                      />
+                      <SortableCard key={card.id} card={card} onOpenEdit={openEditModal} />
                     ))}
-                  </div>
+                  </DroppableColumn>
                 </SortableContext>
 
-                {/* ➕ ADD CARD */}
-                <div className="add-card">
-                  <input
-                    placeholder="Añadir tarea..."
-                    value={newCardTitles[col.id] || ''}
-                    onChange={(e) =>
-                      setNewCardTitles(prev => ({
-                        ...prev,
-                        [col.id]: e.target.value
-                      }))
-                    }
-                  />
-
-                  <button onClick={() => handleCreateCard(col.id)}>
-                    +
-                  </button>
-                </div>
-
+                {/* ÚNICO BOTÓN DE CREACIÓN */}
+                <button className="add-card-btn-styled" onClick={() => openCreateModal(col.id)}>
+                  <span className="plus-icon">+</span> Añadir tarjeta
+                </button>
               </div>
             );
           })}
         </div>
       </div>
 
-      {/* 🧠 DRAG OVERLAY */}
-      <DragOverlay dropAnimation={null}>
-        {activeCard ? (
-          <div className="card dragging">
-            {activeCard.title}
-          </div>
-        ) : null}
-      </DragOverlay>
+      {/* EL MODAL DEBE IR AQUÍ, FUERA DE LAS COLUMNAS */}
+      {isModalOpen && (
+        <CreateCardForm 
+          isOpen={isModalOpen} 
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedCard(null);
+          }} 
+          columnId={selectedColumn} 
+          selectedCard={selectedCard} 
+        />
+      )}
 
+      <DragOverlay dropAnimation={null}>
+        {activeCard ? <div className="card dragging">{activeCard.title}</div> : null}
+      </DragOverlay>
     </DndContext>
   );
 };

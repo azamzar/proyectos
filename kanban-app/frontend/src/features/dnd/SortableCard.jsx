@@ -1,94 +1,52 @@
-import { useState, useEffect } from 'react';
-import { useDispatch } from 'react-redux';
+import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { updateCard } from '../cards/cardsSlice';
-import { updateLocal } from '../cards/cardsSlice';
 
-export default function SortableCard({ card }) {
-  const dispatch = useDispatch();
-
-  const [isEditing, setIsEditing] = useState(false);
-  const [title, setTitle] = useState(card.title);
-  const [description, setDescription] = useState(card.description || '');
-
-  // ✅ SOLO sincroniza si NO estás editando
-  useEffect(() => {
-    if (!isEditing) {
-      setTitle(card.title);
-      setDescription(card.description || '');
-    }
-  }, [card.title, card.description, isEditing]);
-
+export default function SortableCard({ card, onOpenEdit }) {
   const {
     attributes,
     listeners,
     setNodeRef,
     transform,
+    transition,
+    isDragging,
   } = useSortable({
     id: card.id,
+    // Mantenemos esto en false para evitar saltos visuales extraños al reordenar
     animateLayoutChanges: () => false,
   });
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    padding: '10px',
-    margin: '5px',
-    background: 'white',
-    borderRadius: '6px',
-  };
-
-  const handleSave = () => {
-    dispatch(updateLocal({
-      id: card.id,
-      title,
-      description
-    }));
-
-    dispatch(updateCard({
-      id: card.id,
-      data: { title, description }
-    }));
-
-    setIsEditing(false);
+    transition,
+    opacity: isDragging ? 0.5 : 1,
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="card">
-
-      {/* DRAG HANDLE */}
-      <div {...attributes} {...listeners} style={{ cursor: 'grab' }}>
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`card ${isDragging ? 'dragging' : ''}`}
+      // 🆕 Cuando se hace clic en cualquier parte de la tarjeta, abrimos el modal
+      onClick={() => onOpenEdit(card)}
+    >
+      {/* ⠿ DRAG HANDLE: Solo esta parte permite arrastrar */}
+      <div 
+        className="drag-handle" 
+        {...attributes} 
+        {...listeners}
+        onClick={(e) => e.stopPropagation()} // Evita abrir el modal si solo quieres arrastrar
+      >
         ⠿
       </div>
 
-      {/* CONTENIDO */}
-      <div style={{ flex: 1 }}>
-        {isEditing ? (
-          <div className="card-edit">
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Título"
-            />
-
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Descripción"
-            />
-
-            <button onClick={handleSave}>
-              Guardar
-            </button>
-          </div>
-        ) : (
-          <div onClick={() => setIsEditing(true)}>
-            <strong>{card.title}</strong>
-            {card.description && <p>{card.description}</p>}
-          </div>
+      {/* CONTENIDO VISUAL */}
+      <div className="card-content">
+        <span className="card-title">{card.title}</span>
+        {card.description && (
+          <p className="card-description">{card.description}</p>
         )}
       </div>
-
     </div>
   );
 }
