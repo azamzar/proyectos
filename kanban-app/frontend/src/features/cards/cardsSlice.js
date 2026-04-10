@@ -95,7 +95,17 @@ const cardsSlice = createSlice({
 
       // CREATE
       .addCase(createCard.fulfilled, (state, action) => {
-        state.items.push(action.payload);
+        // Buscamos los datos que enviamos originalmente en la petición
+        const sentData = action.meta.arg; 
+        
+        // Combinamos lo que dice el servidor (que trae el ID nuevo) 
+        // con lo que nosotros enviamos (que tiene la descripción)
+        const newCard = {
+          ...sentData,
+          ...action.payload
+        };
+        
+        state.items.push(newCard);
       })
 
       // REORDER

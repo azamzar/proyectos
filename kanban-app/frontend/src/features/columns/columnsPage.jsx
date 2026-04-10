@@ -9,7 +9,7 @@ import '../../styles/index.css';
 
 import { 
   DndContext,
-  pointerWithin,
+  closestCorners,
   DragOverlay, 
   PointerSensor, 
   KeyboardSensor,
@@ -20,10 +20,23 @@ import {
 import { 
   SortableContext, 
   verticalListSortingStrategy, 
-  sortableKeyboardCoordinates 
+  sortableKeyboardCoordinates,
+  arrayMove
 } from '@dnd-kit/sortable';
 
 import SortableCard from '../dnd/SortableCard';
+
+// ----------------------------------------------------
+// COMPONENTE DROPPABLE PARA LAS COLUMNAS VACÍAS
+// ----------------------------------------------------
+const DroppableColumn = ({ id, children }) => {
+  const { setNodeRef } = useDroppable({ id }); 
+  return (
+    <div ref={setNodeRef} className="cards-container">
+      {children}
+    </div>
+  );
+};
 
 const ColumnsPage = () => {
   const dispatch = useDispatch();
@@ -35,6 +48,14 @@ const ColumnsPage = () => {
   const [activeCard, setActiveCard] = useState(null);
   const [editingColumnId, setEditingColumnId] = useState(null);
   const [columnName, setColumnName] = useState('');
+
+  // 🪞 ESTADO LOCAL (ESPEJO) PARA ANIMACIONES FLUIDAS
+  const [localCards, setLocalCards] = useState([]);
+
+  useEffect(() => {
+    const sortedCards = [...cards].sort((a, b) => a.position - b.position);
+    setLocalCards(sortedCards);
+  }, [cards]);
 
   // 🛠️ ESTADOS DEL MODAL
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -64,63 +85,99 @@ const ColumnsPage = () => {
 
   if (status === 'loading') return <div className="loading-screen">Cargando...</div>;
 
-  function DroppableColumn({ id, children }) {
-    const { setNodeRef } = useDroppable({ id });
-    
-    return (
-      <div ref={setNodeRef} className="cards-container">
-        {children}
-      </div>
-    );
-  }
 
+  // ----------------------------------------------------
+  // LOGICA DE ARRASTRE EN TIEMPO REAL (EL HUECO)
+  // ----------------------------------------------------
+  const handleDragOver = (event) => {
+    const { active, over } = event;
+    if (!over) return;
+
+    const activeId = active.id;
+    const overId = over.id;
+
+    if (activeId === overId) return;
+
+    setLocalCards((prev) => {
+      const activeIndex = prev.findIndex((c) => c.id === activeId);
+      if (activeIndex === -1) return prev;
+
+      const activeCard = prev[activeIndex];
+      const isOverAColumn = String(overId).startsWith('col-');
+      const overIndex = prev.findIndex((c) => c.id === overId);
+
+      // Descubrimos a qué columna queremos mover la tarjeta
+      let targetColumnId = null;
+
+      if (isOverAColumn) {
+        targetColumnId = Number(String(overId).replace('col-', ''));
+      } else if (overIndex !== -1) {
+        targetColumnId = prev[overIndex].column_id;
+      }
+
+      if (!targetColumnId) return prev;
+
+      // CASO A: Nos movemos a una COLUMNA DISTINTA
+      if (activeCard.column_id !== targetColumnId) {
+        const updated = [...prev];
+        // Le cambiamos el ID de columna a la tarjeta en el aire
+        updated[activeIndex] = { ...activeCard, column_id: targetColumnId };
+
+        if (overIndex !== -1) {
+          // Si caemos sobre otra tarjeta, hacemos hueco exacto ahí
+          return arrayMove(updated, activeIndex, overIndex);
+        } else {
+          // Si caemos en el espacio vacío de la columna, la mandamos al final
+          return arrayMove(updated, activeIndex, updated.length - 1);
+        }
+      }
+
+      // CASO B: Nos movemos DENTRO DE LA MISMA COLUMNA
+      if (activeCard.column_id === targetColumnId && overIndex !== -1) {
+        return arrayMove(prev, activeIndex, overIndex);
+      }
+
+      return prev;
+    });
+  };
+
+  // ----------------------------------------------------
+  // LOGICA AL SOLTAR (GUARDAR EN BASE DE DATOS)
+  // ----------------------------------------------------
   const handleDragEnd = (event) => {
     const { active, over } = event;
     setActiveCard(null);
 
-    if (!over) return;
-
-    const activeCardId = active.id;
-    const overId = over.id; // Ahora puede ser '2' (id de carta) o 'col-3' (id de columna)
-
-    const activeCardData = cards.find(c => c.id === activeCardId);
-    if (!activeCardData) return;
-
-    let newColumnId;
-    let newPosition = 0;
-
-    // 🕵️‍♂️ DETECCIÓN DE COLUMNA VACÍA
-    // Si el ID del lugar donde soltamos empieza por "col-", es una columna
-    if (String(overId).startsWith('col-')) {
-      const realColumnId = Number(String(overId).replace('col-', ''));
-      newColumnId = realColumnId;
-      newPosition = 1; 
-    } 
-    // 🕵️‍♂️ DETECCIÓN DE OTRA TARJETA
-    // Si no tiene prefijo, significa que lo soltamos sobre una tarjeta normal
-    else {
-      const overCard = cards.find(c => c.id === overId);
-      if (overCard) {
-        newColumnId = overCard.column_id;
-        newPosition = overCard.position;
-      }
+    // Si soltamos fuera de un área válida, reseteamos al estado de Redux
+    if (!over) {
+      setLocalCards([...cards].sort((a, b) => a.position - b.position));
+      return;
     }
 
-    // Si encontramos un destino válido, enviamos la acción a Redux
-    if (newColumnId) {
-      dispatch(reorderCard({
-        card_id: activeCardData.id,
-        new_column_id: newColumnId,
-        new_position: newPosition
-      }));
-    }
+    // Buscamos cómo ha quedado la tarjeta tras todos los movimientos
+    const finalActiveCard = localCards.find(c => c.id === active.id);
+    if (!finalActiveCard) return;
+
+    const newColumnId = finalActiveCard.column_id;
+    const cardsInColumn = localCards.filter(c => c.column_id === newColumnId);
+    
+    // Su posición final es su índice en la lista local filtrada + 1
+    const newPosition = cardsInColumn.findIndex(c => c.id === active.id) + 1; 
+
+    // Enviamos a Redux y Base de Datos
+    dispatch(reorderCard({
+      card_id: finalActiveCard.id,
+      new_column_id: newColumnId,
+      new_position: newPosition
+    }));
   };
 
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={pointerWithin}
-      onDragStart={(e) => setActiveCard(cards.find(c => c.id === e.active.id))}
+      collisionDetection={closestCorners}
+      onDragStart={(e) => setActiveCard(localCards.find(c => c.id === e.active.id))}
+      onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
       <div className="app-container">
@@ -130,9 +187,8 @@ const ColumnsPage = () => {
 
         <div className="board">
           {columns.map(col => {
-            const columnCards = cards
-              .filter(card => card.column_id === col.id)
-              .sort((a, b) => a.position - b.position);
+            // USAMOS LOCALCARDS PARA EL RENDER EN VIVO
+            const columnCards = localCards.filter(card => card.column_id === col.id);
 
             return (
               <div key={col.id} className="column">
@@ -147,7 +203,7 @@ const ColumnsPage = () => {
                   items={columnCards.map(c => c.id)} 
                   strategy={verticalListSortingStrategy}
                 >
-                  {/* Sustituimos el div anterior por nuestro nuevo componente Droppable */}
+                  {/* 🚨 VITAL: El prefijo col- ha vuelto para evitar colisiones de IDs con las tarjetas */}
                   <DroppableColumn id={`col-${col.id}`}>
                     {columnCards.map(card => (
                       <SortableCard key={card.id} card={card} onOpenEdit={openEditModal} />
@@ -155,7 +211,6 @@ const ColumnsPage = () => {
                   </DroppableColumn>
                 </SortableContext>
 
-                {/* ÚNICO BOTÓN DE CREACIÓN */}
                 <button className="add-card-btn-styled" onClick={() => openCreateModal(col.id)}>
                   <span className="plus-icon">+</span> Añadir tarjeta
                 </button>
@@ -165,7 +220,6 @@ const ColumnsPage = () => {
         </div>
       </div>
 
-      {/* EL MODAL DEBE IR AQUÍ, FUERA DE LAS COLUMNAS */}
       {isModalOpen && (
         <CreateCardForm 
           isOpen={isModalOpen} 
@@ -178,6 +232,7 @@ const ColumnsPage = () => {
         />
       )}
 
+      {/* LA TARJETA CLON QUE VUELA PEGADA AL RATÓN */}
       <DragOverlay dropAnimation={null}>
         {activeCard ? <div className="card dragging">{activeCard.title}</div> : null}
       </DragOverlay>

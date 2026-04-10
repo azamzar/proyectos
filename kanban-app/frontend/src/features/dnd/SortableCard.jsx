@@ -12,35 +12,43 @@ export default function SortableCard({ card, onOpenEdit }) {
     isDragging,
   } = useSortable({
     id: card.id,
-    // Mantenemos esto en false para evitar saltos visuales extraños al reordenar
-    animateLayoutChanges: () => false,
+    // 🚨 HEMOS BORRADO animateLayoutChanges
+    // Al quitarlo, dnd-kit animará automáticamente cómo las otras tarjetas se apartan
   });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
   };
 
+  // 🌟 MAGIA VISUAL: Si esta es la tarjeta que estamos arrastrando, pintamos el "Hueco"
+  if (isDragging) {
+    return (
+      <div
+        ref={setNodeRef}
+        style={{ ...style, height: '80px' }} // Altura fija para el hueco
+        className="card-placeholder"
+      />
+    );
+  }
+
+  // 🃏 Renderizado normal de la tarjeta
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={`card ${isDragging ? 'dragging' : ''}`}
-      // 🆕 Cuando se hace clic en cualquier parte de la tarjeta, abrimos el modal
+      className="card"
       onClick={() => onOpenEdit(card)}
     >
-      {/* ⠿ DRAG HANDLE: Solo esta parte permite arrastrar */}
       <div 
         className="drag-handle" 
         {...attributes} 
         {...listeners}
-        onClick={(e) => e.stopPropagation()} // Evita abrir el modal si solo quieres arrastrar
+        onClick={(e) => e.stopPropagation()} 
       >
         ⠿
       </div>
 
-      {/* CONTENIDO VISUAL */}
       <div className="card-content">
         <span className="card-title">{card.title}</span>
         {card.description && (

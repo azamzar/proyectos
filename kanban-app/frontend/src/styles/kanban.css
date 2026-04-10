@@ -81,6 +81,11 @@
   text-overflow: ellipsis;
 }
 
+.card.dragging {
+  opacity: 0.3; /* Hace que la tarjeta que se queda en el sitio sea tenue */
+  border: 2px dashed #3b82f6;
+}
+
 .drag-handle {
   cursor: grab;
   opacity: 0.5;
@@ -192,4 +197,23 @@
 
 .modal-button:hover {
   opacity: 0.9;
+}
+
+/* ------------------- PLACEHOLDER (EL HUECO) ------------------- */
+.card-placeholder {
+  min-height: 80px; /* Si no tiene altura, las otras cards no se moverán */
+  width: 100%;
+  background: rgba(59, 130, 246, 0.1);
+  border: 2px dashed #3b82f6;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  box-sizing: border-box;
+  /* La animación de escala le da un toque de "estoy listo para recibir la tarjeta" */
+  animation: pulsePlaceholder 1.5s infinite ease-in-out; 
+}
+
+@keyframes pulsePlaceholder {
+  0% { background: rgba(59, 130, 246, 0.05); }
+  50% { background: rgba(59, 130, 246, 0.15); }
+  100% { background: rgba(59, 130, 246, 0.05); }
 }
