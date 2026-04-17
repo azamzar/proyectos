@@ -2,24 +2,50 @@
 
 .board {
   display: flex;
+  flex-direction: row; /* Asegura la dirección horizontal */
+  flex-wrap: nowrap;   /* 🚨 VITAL: Prohíbe terminantemente que las columnas bajen a la siguiente línea */
+  width: 100%;         /* Se ajusta al contenedor para que la barra de scroll no se salga de la pantalla */
+  flex: 1; 
   gap: 20px;
   padding: 20px;
   align-items: flex-start;
-  overflow-x: auto;
-  min-height: calc(100vh - 100px);
+  overflow-x: auto; 
+  overflow-y: hidden;
+}
+
+/* 🔥 ESTILIZAR LA BARRA DE SCROLL (Estilo Jira/Slack) */
+.board::-webkit-scrollbar {
+  height: 12px;
+}
+
+.board::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2); 
+  border-radius: 10px;
+  margin: 0 20px; /* Evita que la barra toque los bordes de la pantalla */
+}
+
+.board::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15); 
+  border-radius: 10px;
+}
+
+.board::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3); 
 }
 
 .column {
   width: 300px;
   min-width: 300px;
   max-width: 300px;
+  flex-shrink: 0; /* CRUCIAL: Impide que las columnas se aplasten al añadir muchas */
   background: #0f172a;
   border-radius: 12px;
   display: flex;
   flex-direction: column;
   padding: 16px;
-  max-height: 90vh;
-  overflow-y: hidden;
+  
+  /* Ajusta la altura máxima para que deje espacio a la barra de scroll de abajo */
+  max-height: calc(100vh - 120px); 
 }
 
 /* ------------------- CARDS ------------------- */
@@ -123,16 +149,16 @@
 /* ------------------- MODAL (RESTAURADO Y CORREGIDO) ------------------- */
 
 .modal-overlay {
-  position: fixed; /* IMPORTANTE: Esto lo saca del flujo y lo pone encima */
+  position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(15, 23, 42, 0.8); /* Fondo semi-transparente oscuro */
+  background: rgba(15, 23, 42, 0.8);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999; /* Asegura que esté por encima de todo */
+  z-index: 9999;
 }
 
 .modal {
@@ -147,16 +173,20 @@
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
 }
 
+/* 1. ESTILOS COMUNES (Para no repetir código) */
 .modal-input,
 .modal-textarea {
   width: 100%;
+  box-sizing: border-box; /* Evita que el padding los saque del margen derecho */
   background: #0f172a;
   border: 1px solid #334155;
   border-radius: 10px;
   color: white;
   padding: 12px 14px;
   font-size: 16px;
+  font-family: var(--sans); /* Asegura que ambos usen la misma fuente que el título */
   outline: none;
+  transition: border-color 0.2s;
 }
 
 .modal-input:focus,
@@ -164,10 +194,18 @@
   border-color: #3b82f6;
 }
 
+/* 2. PLACEHOLDERS UNIFICADOS */
+.modal-input::placeholder,
+.modal-textarea::placeholder {
+  color: #64748b; /* El color gris azulado estilizado */
+  opacity: 1;      /* Quita la transparencia por defecto de algunos navegadores */
+}
+
+/* 3. AJUSTES ESPECÍFICOS PARA EL ÁREA DE TEXTO */
 .modal-textarea {
   min-height: 150px;
   line-height: 1.5;
-  resize: none;
+  resize: none;   /* Impide que el usuario deforme el diseño del modal */
 }
 
 .modal-buttons {
@@ -199,6 +237,12 @@
   opacity: 0.9;
 }
 
+.modal h2 {
+  margin-bottom: 10px;
+  color: white;
+  text-align: left;
+}
+
 /* ------------------- PLACEHOLDER (EL HUECO) ------------------- */
 .card-placeholder {
   min-height: 80px; /* Si no tiene altura, las otras cards no se moverán */
@@ -216,4 +260,224 @@
   0% { background: rgba(59, 130, 246, 0.05); }
   50% { background: rgba(59, 130, 246, 0.15); }
   100% { background: rgba(59, 130, 246, 0.05); }
+}
+
+/* ------------------- EDICIÓN DE COLUMNAS ------------------- */
+.column-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  gap: 10px;
+}
+
+.column-header h3 {
+  flex: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+  margin: 0;
+  border-radius: 6px;
+  transition: background 0.2s;
+  font-size: 16px;
+}
+
+.column-header h3:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.column-name-input {
+  flex: 1;
+  background: #1e293b;
+  border: 2px solid #3b82f6;
+  border-radius: 6px;
+  color: white;
+  padding: 4px 8px;
+  font-size: 16px;
+  font-weight: 600;
+  outline: none;
+}
+
+.column-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-count {
+  background: #1e293b;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.delete-col-btn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+  border-radius: 4px;
+}
+
+.delete-col-btn:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* ------------------- AÑADIR NUEVA COLUMNA ------------------- */
+.add-column-wrapper {
+  min-width: 300px;
+  width: 300px;
+  flex-shrink: 0;
+}
+
+.add-column-btn {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  padding: 14px;
+  text-align: left;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.add-column-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.add-column-form {
+  background: #0f172a;
+  border-radius: 12px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.add-column-form input {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  color: white;
+  padding: 10px;
+  font-size: 14px;
+  outline: none;
+}
+
+.add-column-form input:focus {
+  border-color: #3b82f6;
+}
+
+.add-column-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.save-col-btn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.save-col-btn:hover {
+  background: #2563eb;
+}
+
+.cancel-col-btn {
+  background: transparent;
+  color: #94a3b8;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 8px;
+}
+
+.cancel-col-btn:hover {
+  color: white;
+}
+
+/* ------------------- CONTENEDOR PRINCIPAL ------------------- */
+.app-container {
+  width: 100vw;      /* 🚨 NUEVO: Forzamos a que mida exactamente el ancho de tu monitor */
+  max-width: 100%;   /* Evita que la página entera cree su propio scroll */
+  height: 100vh; 
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; 
+  background-color: #020617; 
+}
+
+/* ------------------- HEADER ------------------- */
+.app-header {
+  padding: 20px 30px 10px 30px;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between; /* 🚨 Separa el título de los botones */
+  align-items: center;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 24px;
+  color: white;
+}
+
+/* ------------------- CONTROLES DE USUARIO ------------------- */
+.user-controls {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.welcome-text {
+  color: #94a3b8;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.welcome-text strong {
+  color: white; /* Resalta el nombre del usuario */
+}
+
+.auth-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  font-family: var(--sans);
+}
+
+.auth-btn.login {
+  background: #3b82f6;
+  color: white;
+}
+
+.auth-btn.login:hover {
+  background: #2563eb;
+}
+
+.auth-btn.logout {
+  background: transparent;
+  color: #ef4444; /* Rojo suave */
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.auth-btn.logout:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.5);
 }

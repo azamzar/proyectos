@@ -10,12 +10,31 @@ export const fetchColumns = createAsyncThunk(
   }
 );
 
+// ---------------- CREATE ----------------
+export const createColumn = createAsyncThunk(
+  'columns/createColumn',
+  async ({ name }) => {
+    const res = await api.post('/columns', { name });
+    // Importante: tu backend debería devolver el objeto de la columna completa (con su nuevo ID)
+    return res.data; 
+  }
+);
+
 // ---------------- UPDATE ----------------
 export const updateColumn = createAsyncThunk(
   'columns/updateColumn',
   async ({ id, name }) => {
     const res = await api.put(`/columns/${id}`, { name });
     return res.data;
+  }
+);
+
+// ---------------- DELETE ----------------
+export const deleteColumn = createAsyncThunk(
+  'columns/deleteColumn',
+  async (id) => {
+    await api.delete(`/columns/${id}`);
+    return id; // Devolvemos el ID para saber cuál borrar del estado de Redux
   }
 );
 
@@ -42,12 +61,24 @@ const columnsSlice = createSlice({
         state.items = action.payload;
       })
 
-      // 🔥 SOLO UNA VEZ
+      // CREATE
+      .addCase(createColumn.fulfilled, (state, action) => {
+        // Añadimos la nueva columna al final del array
+        state.items.push(action.payload);
+      })
+
+      // UPDATE
       .addCase(updateColumn.fulfilled, (state, action) => {
         const index = state.items.findIndex(c => c.id === action.payload.id);
         if (index !== -1) {
           state.items[index] = action.payload;
         }
+      })
+
+      // DELETE
+      .addCase(deleteColumn.fulfilled, (state, action) => {
+        // Filtramos para quedarnos con todas las columnas EXCEPTO la que acabamos de borrar
+        state.items = state.items.filter(c => c.id !== action.payload);
       });
   }
 });

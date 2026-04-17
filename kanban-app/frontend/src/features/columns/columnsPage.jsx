@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchColumns, updateColumn } from './columnsSlice';
+import { fetchColumns, updateColumn, createColumn, deleteColumn } from './columnsSlice';
+import { useNavigate } from 'react-router-dom';
+import { logout } from '../auth/authSlice';
 import { fetchCards, reorderCard } from '../cards/cardsSlice';
 import CreateCardForm from '../cards/CreateCardForm.jsx'; 
 
@@ -26,9 +28,6 @@ import {
 
 import SortableCard from '../dnd/SortableCard';
 
-// ----------------------------------------------------
-// COMPONENTE DROPPABLE PARA LAS COLUMNAS VACÍAS
-// ----------------------------------------------------
 const DroppableColumn = ({ id, children }) => {
   const { setNodeRef } = useDroppable({ id }); 
   return (
@@ -40,16 +39,31 @@ const DroppableColumn = ({ id, children }) => {
 
 const ColumnsPage = () => {
   const dispatch = useDispatch();
+
+  // para manejar autenticación y mostrar el nombre del usuario en el header, además de permitir cerrar sesión
+  const navigate = useNavigate();
+  const { user } = useSelector(state => state.auth);
+  const handleLogin = () => navigate('/login');
+
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate('/login');
+  };
   
   const columns = useSelector(state => state.columns?.items || []);
   const cards = useSelector(state => state.cards?.items || []);
   const status = useSelector(state => state.columns?.status || 'idle');
 
   const [activeCard, setActiveCard] = useState(null);
+  
+  // ✏️ ESTADOS PARA EDITAR COLUMNAS
   const [editingColumnId, setEditingColumnId] = useState(null);
   const [columnName, setColumnName] = useState('');
 
-  // 🪞 ESTADO LOCAL (ESPEJO) PARA ANIMACIONES FLUIDAS
+  // ➕ ESTADOS PARA AÑADIR COLUMNA
+  const [isAddingColumn, setIsAddingColumn] = useState(false);
+  const [newColumnName, setNewColumnName] = useState('');
+
   const [localCards, setLocalCards] = useState([]);
 
   useEffect(() => {
@@ -57,7 +71,6 @@ const ColumnsPage = () => {
     setLocalCards(sortedCards);
   }, [cards]);
 
-  // 🛠️ ESTADOS DEL MODAL
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedColumn, setSelectedColumn] = useState(null);
   const [selectedCard, setSelectedCard] = useState(null);
@@ -83,19 +96,41 @@ const ColumnsPage = () => {
     dispatch(fetchCards());
   }, [dispatch]);
 
-  if (status === 'loading') return <div className="loading-screen">Cargando...</div>;
-
 
   // ----------------------------------------------------
-  // LOGICA DE ARRASTRE EN TIEMPO REAL (EL HUECO)
+  // MANEJADORES DE COLUMNAS
+  // ----------------------------------------------------
+  const handleUpdateColumnName = (id) => {
+    if (columnName.trim() !== '') {
+      dispatch(updateColumn({ id, name: columnName }));
+    }
+    setEditingColumnId(null);
+  };
+
+  const handleDeleteColumn = (id) => {
+    if (window.confirm('¿Seguro que quieres eliminar esta columna? Las tarjetas en ella también se borrarán.')) {
+      dispatch(deleteColumn(id));
+    }
+  };
+
+  const handleCreateColumn = () => {
+    if (newColumnName.trim() !== '') {
+      dispatch(createColumn({ name: newColumnName }));
+      setNewColumnName('');
+      setIsAddingColumn(false);
+    }
+  };
+
+  if (status === 'loading') return <div className="loading-screen">Cargando...</div>;
+
+  // ----------------------------------------------------
+  // LÓGICA DRAG & DROP
   // ----------------------------------------------------
   const handleDragOver = (event) => {
     const { active, over } = event;
     if (!over) return;
-
     const activeId = active.id;
     const overId = over.id;
-
     if (activeId === overId) return;
 
     setLocalCards((prev) => {
@@ -106,7 +141,6 @@ const ColumnsPage = () => {
       const isOverAColumn = String(overId).startsWith('col-');
       const overIndex = prev.findIndex((c) => c.id === overId);
 
-      // Descubrimos a qué columna queremos mover la tarjeta
       let targetColumnId = null;
 
       if (isOverAColumn) {
@@ -117,54 +151,39 @@ const ColumnsPage = () => {
 
       if (!targetColumnId) return prev;
 
-      // CASO A: Nos movemos a una COLUMNA DISTINTA
       if (activeCard.column_id !== targetColumnId) {
         const updated = [...prev];
-        // Le cambiamos el ID de columna a la tarjeta en el aire
         updated[activeIndex] = { ...activeCard, column_id: targetColumnId };
-
         if (overIndex !== -1) {
-          // Si caemos sobre otra tarjeta, hacemos hueco exacto ahí
           return arrayMove(updated, activeIndex, overIndex);
         } else {
-          // Si caemos en el espacio vacío de la columna, la mandamos al final
           return arrayMove(updated, activeIndex, updated.length - 1);
         }
       }
 
-      // CASO B: Nos movemos DENTRO DE LA MISMA COLUMNA
       if (activeCard.column_id === targetColumnId && overIndex !== -1) {
         return arrayMove(prev, activeIndex, overIndex);
       }
-
       return prev;
     });
   };
 
-  // ----------------------------------------------------
-  // LOGICA AL SOLTAR (GUARDAR EN BASE DE DATOS)
-  // ----------------------------------------------------
   const handleDragEnd = (event) => {
     const { active, over } = event;
     setActiveCard(null);
 
-    // Si soltamos fuera de un área válida, reseteamos al estado de Redux
     if (!over) {
       setLocalCards([...cards].sort((a, b) => a.position - b.position));
       return;
     }
 
-    // Buscamos cómo ha quedado la tarjeta tras todos los movimientos
     const finalActiveCard = localCards.find(c => c.id === active.id);
     if (!finalActiveCard) return;
 
     const newColumnId = finalActiveCard.column_id;
     const cardsInColumn = localCards.filter(c => c.column_id === newColumnId);
-    
-    // Su posición final es su índice en la lista local filtrada + 1
     const newPosition = cardsInColumn.findIndex(c => c.id === active.id) + 1; 
 
-    // Enviamos a Redux y Base de Datos
     dispatch(reorderCard({
       card_id: finalActiveCard.id,
       new_column_id: newColumnId,
@@ -181,29 +200,64 @@ const ColumnsPage = () => {
       onDragEnd={handleDragEnd}
     >
       <div className="app-container">
+        
+        {/* HEADER CORREGIDO */}
         <header className="app-header">
           <h1>Kanban</h1>
+          
+          <div className="user-controls">
+            {user ? (
+              <>
+                <span className="welcome-text">
+                  Bienvenido, <strong>{user.name}</strong>
+                </span>
+                <button className="auth-btn logout" onClick={handleLogout}>
+                  Cerrar Sesión
+                </button>
+              </>
+            ) : (
+              <button className="auth-btn login" onClick={handleLogin}>
+                Iniciar Sesión
+              </button>
+            )}
+          </div>
         </header>
 
         <div className="board">
           {columns.map(col => {
-            // USAMOS LOCALCARDS PARA EL RENDER EN VIVO
             const columnCards = localCards.filter(card => card.column_id === col.id);
 
             return (
               <div key={col.id} className="column">
                 <div className="column-header">
-                  <h3 onClick={() => { setEditingColumnId(col.id); setColumnName(col.name || ''); }}>
-                    {col.name || 'Sin nombre'}
-                  </h3>
-                  <span>{columnCards.length}</span>
+                  {editingColumnId === col.id ? (
+                    <input
+                      className="column-name-input"
+                      autoFocus
+                      value={columnName}
+                      onChange={(e) => setColumnName(e.target.value)}
+                      onBlur={() => handleUpdateColumnName(col.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleUpdateColumnName(col.id);
+                        if (e.key === 'Escape') setEditingColumnId(null);
+                      }}
+                    />
+                  ) : (
+                    <h3 onClick={() => { setEditingColumnId(col.id); setColumnName(col.name || ''); }}>
+                      {col.name || 'Sin nombre'}
+                    </h3>
+                  )}
+
+                  <div className="column-header-actions">
+                    <span className="card-count">{columnCards.length}</span>
+                    <button className="delete-col-btn" onClick={() => handleDeleteColumn(col.id)}>×</button>
+                  </div>
                 </div>
 
                 <SortableContext 
                   items={columnCards.map(c => c.id)} 
                   strategy={verticalListSortingStrategy}
                 >
-                  {/* 🚨 VITAL: El prefijo col- ha vuelto para evitar colisiones de IDs con las tarjetas */}
                   <DroppableColumn id={`col-${col.id}`}>
                     {columnCards.map(card => (
                       <SortableCard key={card.id} card={card} onOpenEdit={openEditModal} />
@@ -217,6 +271,31 @@ const ColumnsPage = () => {
               </div>
             );
           })}
+
+          <div className="add-column-wrapper">
+            {isAddingColumn ? (
+              <div className="add-column-form">
+                <input
+                  autoFocus
+                  placeholder="Título de la columna..."
+                  value={newColumnName}
+                  onChange={(e) => setNewColumnName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleCreateColumn();
+                    if (e.key === 'Escape') setIsAddingColumn(false);
+                  }}
+                />
+                <div className="add-column-actions">
+                  <button className="save-col-btn" onClick={handleCreateColumn}>Añadir</button>
+                  <button className="cancel-col-btn" onClick={() => setIsAddingColumn(false)}>✕</button>
+                </div>
+              </div>
+            ) : (
+              <button className="add-column-btn" onClick={() => setIsAddingColumn(true)}>
+                + Nueva columna
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -232,7 +311,6 @@ const ColumnsPage = () => {
         />
       )}
 
-      {/* LA TARJETA CLON QUE VUELA PEGADA AL RATÓN */}
       <DragOverlay dropAnimation={null}>
         {activeCard ? <div className="card dragging">{activeCard.title}</div> : null}
       </DragOverlay>

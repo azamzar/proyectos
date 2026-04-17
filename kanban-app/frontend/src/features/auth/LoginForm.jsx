@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { login } from './authSlice';
 import { useNavigate, Link } from 'react-router-dom'; // 🆕 Importamos Link
 import api from '../../services/api';
+import '../../styles/auth.css';
 
 const LoginForm = () => {
   const dispatch = useDispatch();
@@ -22,40 +23,38 @@ const LoginForm = () => {
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: '2rem auto', textAlign: 'center' }}>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <h2>Iniciar Sesión</h2>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-        
-        <input 
-          type="email" 
-          placeholder="Email" 
-          value={email}
-          onChange={e => setEmail(e.target.value)} 
-          required 
-        />
-        <input 
-          type="password" 
-          placeholder="Contraseña" 
-          value={password}
-          onChange={e => setPassword(e.target.value)} 
-          required 
-        />
-        
-        <button type="submit" disabled={status === 'loading'}>
-          {status === 'loading' ? 'Cargando...' : 'Entrar'}
-        </button>
-      </form>
+    <div className="auth-container">
+      <div className="auth-card">
+        <form onSubmit={handleSubmit} className="auth-form">
+          <h2>Iniciar Sesión</h2>
+          {error && <div className="error-message">{error}</div>}
+          
+          <input 
+            type="email" 
+            placeholder="Email" 
+            value={email}
+            onChange={e => setEmail(e.target.value)} 
+            required 
+          />
+          <input 
+            type="password" 
+            placeholder="Contraseña" 
+            value={password}
+            onChange={e => setPassword(e.target.value)} 
+            required 
+          />
+          
+          <button type="submit" className="auth-submit-btn" disabled={status === 'loading'}>
+            {status === 'loading' ? 'Entrando...' : 'Entrar'}
+          </button>
+        </form>
 
-      {/* 🆕 Enlace de ayuda para el usuario */}
-      <p style={{ marginTop: '1.5rem' }}>
-        ¿No tienes cuenta?{' '}
-        <Link to="/register" style={{ color: '#007bff', textDecoration: 'none', fontWeight: 'bold' }}>
-          Regístrate aquí
-        </Link>
-      </p>
+        <div className="auth-footer">
+          ¿No tienes cuenta? <Link to="/register" className="auth-link">Regístrate gratis</Link>
+        </div>
+      </div>
     </div>
   );
-};
+}
 
 export default LoginForm;

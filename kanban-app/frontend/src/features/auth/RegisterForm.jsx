@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { register } from './authSlice';
 import { useNavigate, Link } from 'react-router-dom';
-import api from '../../services/api';
+import '../../styles/auth.css'; // Asegúrate de que la ruta al CSS sea correcta
 
 const RegisterForm = () => {
   const dispatch = useDispatch();
@@ -13,7 +13,7 @@ const RegisterForm = () => {
     name: '',
     email: '',
     password: '',
-    password_confirmation: '' // Importante para la validación de Laravel
+    password_confirmation: '' 
   });
 
   const handleChange = (e) => {
@@ -26,69 +26,73 @@ const RegisterForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Guardamos el resultado de la acción
+    // Ejecutamos la acción de registro
     const result = await dispatch(register(formData));
 
-    // Solo si el registro fue exitoso (status 201 de Laravel)
+    // Si el registro es exitoso, redirigimos al tablero principal
     if (result.meta.requestStatus === 'fulfilled') {
       navigate('/boards');
-    } else {
-      // Si falló (error 422), no navegamos. 
-      // El error ya debería estar en state.auth.error gracias al slice.
-      console.error("Fallo en el registro:", result.payload);
     }
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: '2rem auto' }}>
-      <h2>Crear Cuenta</h2>
-      {error && <p style={{ color: 'red', fontWeight: 'bold' }}>{error}</p>}
-      
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <input
-          name="name"
-          type="text"
-          placeholder="Nombre completo"
-          value={formData.name}
-          onChange={handleChange}
-          required
-        />
-        <input
-          name="email"
-          type="email"
-          placeholder="Correo electrónico"
-          value={formData.email}
-          onChange={handleChange}
-          required
-        />
-        <input
-          name="password"
-          type="password"
-          placeholder="Contraseña"
-          value={formData.password}
-          onChange={handleChange}
-          required
-        />
-        <input
-          name="password_confirmation"
-          type="password"
-          placeholder="Confirmar contraseña"
-          value={formData.password_confirmation}
-          onChange={handleChange}
-          required
-        />
+    <div className="auth-container">
+      <div className="auth-card">
+        <h2>Crear Cuenta</h2>
         
-        <button type="submit" disabled={status === 'loading'}>
-          {status === 'loading' ? 'Registrando...' : 'Registrarse'}
-        </button>
+        {/* Mostrar error si la validación falla */}
+        {error && <div className="error-message">{error}</div>}
+        
+        <form onSubmit={handleSubmit} className="auth-form">
+          <input
+            name="name"
+            type="text"
+            placeholder="Nombre completo"
+            value={formData.name}
+            onChange={handleChange}
+            required
+          />
+          <input
+            name="email"
+            type="email"
+            placeholder="Correo electrónico"
+            value={formData.email}
+            onChange={handleChange}
+            required
+          />
+          <input
+            name="password"
+            type="password"
+            placeholder="Contraseña"
+            value={formData.password}
+            onChange={handleChange}
+            required
+          />
+          <input
+            name="password_confirmation"
+            type="password"
+            placeholder="Confirmar contraseña"
+            value={formData.password_confirmation}
+            onChange={handleChange}
+            required
+          />
+          
+          <button 
+            type="submit" 
+            className="auth-submit-btn" 
+            disabled={status === 'loading'}
+          >
+            {status === 'loading' ? 'Registrando...' : 'Registrarse'}
+          </button>
+        </form>
 
-      </form>
-      <p style={{ marginTop: '1.5rem', textAlign: 'center' }}>
-        ¿Ya tienes cuenta?{' '}
-        <Link to="/login" style={{ color: '#007bff', textDecoration: 'none', fontWeight: 'bold' }}>
-          Inicia sesión
-        </Link>
-      </p>
+        <div className="auth-footer">
+          ¿Ya tienes cuenta?{' '}
+          <Link to="/login" className="auth-link">
+            Inicia sesión
+          </Link>
+        </div>
+      </div>
     </div>
   );
 };
