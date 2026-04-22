@@ -19,7 +19,10 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['*'],
+    'allowed_origins' => [
+        'http://localhost:5173',
+        'https://kanban-app-mu-five.vercel.app/',
+    ],
 
     'allowed_origins_patterns' => [],
 
