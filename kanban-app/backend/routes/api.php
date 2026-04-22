@@ -7,7 +7,6 @@ use App\Http\Controllers\Api\ColumnController;
 use App\Http\Controllers\Api\CardController;
 use App\Http\Controllers\Api\AuthController;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Route;
 
 Route::get('/run-migrations', function () {
     // Limpiamos caché de rutas y configuración antes de migrar
