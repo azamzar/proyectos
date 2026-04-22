@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { register } from './authSlice';
 import { useNavigate, Link } from 'react-router-dom';
-import '../../styles/auth.css'; // Asegúrate de que la ruta al CSS sea correcta
+import '../../styles/auth.css'; 
 
 const RegisterForm = () => {
   const dispatch = useDispatch();
@@ -25,11 +25,7 @@ const RegisterForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Ejecutamos la acción de registro
     const result = await dispatch(register(formData));
-
-    // Si el registro es exitoso, redirigimos al tablero principal
     if (result.meta.requestStatus === 'fulfilled') {
       navigate('/boards');
     }
@@ -40,8 +36,18 @@ const RegisterForm = () => {
       <div className="auth-card">
         <h2>Crear Cuenta</h2>
         
-        {/* Mostrar error si la validación falla */}
-        {error && <div className="error-message">{error}</div>}
+        {/* NUEVA LÓGICA DE ERRORES: Muestra una lista de viñetas */}
+        {error && (
+          <div className="error-message" style={{ textAlign: 'left', fontSize: '0.9rem', marginBottom: '1rem' }}>
+            <ul style={{ margin: 0, paddingLeft: '20px' }}>
+              {Array.isArray(error) ? (
+                error.map((msg, index) => <li key={index}>{msg}</li>)
+              ) : (
+                <li>{error}</li>
+              )}
+            </ul>
+          </div>
+        )}
         
         <form onSubmit={handleSubmit} className="auth-form">
           <input
@@ -63,7 +69,7 @@ const RegisterForm = () => {
           <input
             name="password"
             type="password"
-            placeholder="Contraseña"
+            placeholder="Contraseña (mínimo 8 caracteres)"
             value={formData.password}
             onChange={handleChange}
             required

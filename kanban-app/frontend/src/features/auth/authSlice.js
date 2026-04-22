@@ -1,15 +1,25 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../services/api';
 
+// Función auxiliar para extraer errores de Laravel
+const extractErrors = (err) => {
+  const data = err.response?.data;
+  if (data?.errors) {
+    // Convierte el objeto de errores de Laravel en un array plano de mensajes
+    return Object.values(data.errors).flat();
+  }
+  return [data?.message || 'Error inesperado en el servidor'];
+};
+
 // ---------------- REGISTER ----------------
 export const register = createAsyncThunk(
   'auth/register',
   async ({ name, email, password, password_confirmation }, { rejectWithValue }) => {
     try {
       const res = await api.post('/register', { name, email, password, password_confirmation });
-      return res.data; // { user, token }
+      return res.data; 
     } catch (err) {
-      return rejectWithValue(err.response?.data?.message || 'Error en registro');
+      return rejectWithValue(extractErrors(err)); // Pasamos el array de errores
     }
   }
 );
@@ -20,9 +30,9 @@ export const login = createAsyncThunk(
   async ({ email, password }, { rejectWithValue }) => {
     try {
       const res = await api.post('/login', { email, password });
-      return res.data; // { user, token }
+      return res.data; 
     } catch (err) {
-      return rejectWithValue(err.response?.data?.message || 'Error en login');
+      return rejectWithValue(extractErrors(err)); // Pasamos el array de errores
     }
   }
 );
@@ -33,7 +43,7 @@ const authSlice = createSlice({
     user: null,
     token: localStorage.getItem('token') || null,
     status: 'idle',
-    error: null,
+    error: null, // Ahora será siempre un array (o null)
   },
   reducers: {
     logout: (state) => {
@@ -44,7 +54,7 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(login.pending, (state) => { state.status = 'loading'; })
+      .addCase(login.pending, (state) => { state.status = 'loading'; state.error = null; })
       .addCase(login.fulfilled, (state, action) => {
         state.status = 'succeeded';
         state.user = action.payload.user;
@@ -53,14 +63,18 @@ const authSlice = createSlice({
       })
       .addCase(login.rejected, (state, action) => {
         state.status = 'failed';
-        state.error = action.payload;
+        state.error = action.payload; // Guarda el array de errores
       })
-      // El bloque de register sigue la misma lógica
+      .addCase(register.pending, (state) => { state.status = 'loading'; state.error = null; })
       .addCase(register.fulfilled, (state, action) => {
         state.status = 'succeeded';
         state.user = action.payload.user;
         state.token = action.payload.token;
         localStorage.setItem('token', action.payload.token);
+      })
+      .addCase(register.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload; // Guarda el array de errores
       });
   }
 });

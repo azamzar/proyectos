@@ -27,7 +27,11 @@ const LoginForm = () => {
       <div className="auth-card">
         <form onSubmit={handleSubmit} className="auth-form">
           <h2>Iniciar Sesión</h2>
-          {error && <div className="error-message">{error}</div>}
+          {error && (
+            <div className="error-message">
+              {Array.isArray(error) ? error[0] : error}
+            </div>
+          )}
           
           <input 
             type="email" 
