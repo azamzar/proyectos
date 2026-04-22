@@ -10,10 +10,16 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/run-migrations', function () {
+    // Limpiamos caché de rutas y configuración antes de migrar
+    Artisan::call('route:clear');
+    Artisan::call('config:clear');
+    
     try {
-        // Ejecuta las migraciones y captura la salida
         $output = Artisan::call('migrate', ['--force' => true]);
-        return response()->json(['message' => 'Migraciones ejecutadas', 'output' => Artisan::output()]);
+        return response()->json([
+            'message' => 'Migraciones ejecutadas', 
+            'output' => Artisan::output()
+        ]);
     } catch (\Exception $e) {
         return response()->json(['error' => $e->getMessage()], 500);
     }
