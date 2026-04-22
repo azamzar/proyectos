@@ -9,18 +9,22 @@ use App\Http\Controllers\Api\AuthController;
 use Illuminate\Support\Facades\Artisan;
 
 Route::get('/run-migrations', function () {
-    // Limpiamos caché de rutas y configuración antes de migrar
-    Artisan::call('route:clear');
+    // 1. Limpiamos TODA la caché de configuración y rutas
     Artisan::call('config:clear');
+    Artisan::call('route:clear');
+    Artisan::call('cache:clear');
     
     try {
-        $output = Artisan::call('migrate', ['--force' => true]);
+        // 2. Ejecutamos las migraciones
+        Artisan::call('migrate', ['--force' => true]);
+        
         return response()->json([
-            'message' => 'Migraciones ejecutadas', 
+            'status' => 'success',
+            'message' => 'Caché limpia y migraciones ejecutadas',
             'output' => Artisan::output()
         ]);
     } catch (\Exception $e) {
-        return response()->json(['error' => $e->getMessage()], 500);
+        return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
     }
 });
 
