@@ -21,7 +21,7 @@ return [
 
     'allowed_origins' => [
         'http://localhost:5173',
-        'https://kanban-app-mu-five.vercel.app/',
+        'https://kanban-app-mu-five.vercel.app',
     ],
 
     'allowed_origins_patterns' => [],
