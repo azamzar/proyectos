@@ -5,7 +5,19 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\BoardController;
 use App\Http\Controllers\Api\ColumnController;
 use App\Http\Controllers\Api\CardController;
-use App\Http\Controllers\Api\AuthController; // Necesitarás crear este controlador
+use App\Http\Controllers\Api\AuthController;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Route;
+
+Route::get('/run-migrations', function () {
+    try {
+        // Ejecuta las migraciones y captura la salida
+        $output = Artisan::call('migrate', ['--force' => true]);
+        return response()->json(['message' => 'Migraciones ejecutadas', 'output' => Artisan::output()]);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+});
 
 // ---------------- RUTAS PÚBLICAS ----------------
 Route::post('/register', [AuthController::class, 'register']);
