@@ -14,10 +14,6 @@ build/
 # Jupyter Notebooks
 .ipynb_checkpoints/
 
-# Data
-/data/raw/
-/data/processed/
-
 # Streamlit
 .streamlit/
 

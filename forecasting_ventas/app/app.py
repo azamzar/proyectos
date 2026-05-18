@@ -10,18 +10,17 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import streamlit as st
-# ── Rutas ─────────────────────────────────────────────────────────────────────
+# ── Rutas (Simplificadas para Streamlit Cloud) ────────────────────────────────
 def get_project_root() -> Path:
-    """Raíz del proyecto (donde están data/ y models/)."""
-    here = Path(__file__).resolve().parent
-    # app.py dentro de app/ → subir un nivel
-    if (here.parent / "data").is_dir():
-        return here.parent
-    # app.py en la raíz del proyecto
-    if (here / "data").is_dir():
-        return here
-    return here.parent
+    # __file__ es .../forecasting_ventas/app/app.py
+    # .parent es .../forecasting_ventas/app/
+    # .parent.parent es .../forecasting_ventas/ (la raíz del proyecto)
+    return Path(__file__).resolve().parent.parent
+
 ROOT = get_project_root()
+
+# Asegúrate de que los nombres de las carpetas coincidan EXACTAMENTE 
+# con lo que tienes en GitHub (ej. "data" vs "Data")
 MODEL_PATH = ROOT / "models" / "modelo_final.joblib"
 DATA_PATH = ROOT / "data" / "processed" / "inferencia_df_transformado.csv"
 RAW_PATH = ROOT / "data" / "raw" / "inferencia" / "ventas_2025_inferencia.csv"
